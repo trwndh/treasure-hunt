@@ -115,7 +115,6 @@ func setupNewBoard(gridData []byte) (err error) {
 func generateTreasurePosition() {
 	for i := 0; i < len(clearPaths)/3; i++ {
 		// generate possible treasure location
-		// random := rand.New(rand.NewSource(time.Now().UnixNano()))
 		randomIndex, _ := rand.Int(rand.Reader, big.NewInt(int64(len(clearPaths))))
 		idx := int(randomIndex.Int64())
 		time.Sleep(15 * time.Millisecond)
