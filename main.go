@@ -117,7 +117,7 @@ func generateTreasurePosition() {
 		// generate possible treasure location
 		randomIndex, _ := rand.Int(rand.Reader, big.NewInt(int64(len(clearPaths))))
 		idx := int(randomIndex.Int64())
-		time.Sleep(15 * time.Millisecond)
+
 		// exclude starting position from treasure possibility location
 		if !reflect.DeepEqual(currentPosition, clearPaths[idx]) {
 			// if random generated same value each loop, it will append same coordinate.
