@@ -53,3 +53,7 @@ The result will look like this:
 ```
 
 do this to move your position to each of `$`. 
+
+## Quit the game
+
+input `q` to quit the game. Or you can use the mighty `Ctrl + C`.
