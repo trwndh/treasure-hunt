@@ -21,7 +21,7 @@ var (
 	// map of coordinates
 	// clearPaths contains every path that user can move to
 	clearPaths = make([][]int, 0)
-
+	blockPaths = make([][]int, 0)
 	// store all possibility coordinates of treasure
 	possibleTreasurePosition = make([][]int, 0)
 
@@ -52,6 +52,10 @@ var (
 	// example: if you want to change the value in row 2 and column 3 to 'X',
 	// just use this way: rowData[2][3] = 'X'
 	rowData = make(map[int][]string, 0)
+
+	doneGoUp    bool
+	doneGoRight bool
+	doneGoDown  bool
 )
 
 func main() {
@@ -94,6 +98,7 @@ func setupNewBoard(gridData []byte) (err error) {
 			switch data {
 			case "#":
 				// ignore obstacles
+				blockPaths = append(blockPaths, dataCoordinate)
 			case ".":
 				clearPaths = append(clearPaths, dataCoordinate)
 			case "X":
@@ -118,8 +123,8 @@ func generateTreasurePosition() {
 		randomIndex, _ := rand.Int(rand.Reader, big.NewInt(int64(len(clearPaths))))
 		idx := int(randomIndex.Int64())
 
-		// exclude starting position from treasure possibility location
-		if !reflect.DeepEqual(currentPosition, clearPaths[idx]) {
+		// exclude starting position from treasure possibility location, exclude 4,4 and 4,6 too since it's impossible to get there.
+		if !reflect.DeepEqual(currentPosition, clearPaths[idx]) && !reflect.DeepEqual(clearPaths[idx],[]int{4,4}) && !reflect.DeepEqual(clearPaths[idx], []int{4,6}) {
 			// if random generated same value each loop, it will append same coordinate.
 			alreadyAdded, _ := isInPossibleTreasureLocation(clearPaths[idx])
 			if !alreadyAdded {
@@ -149,7 +154,17 @@ func isInClearPath(x, y int) bool {
 	}
 	return false
 }
-
+// check position is in the clear path
+func isInBlockPath(x, y int) bool {
+	checkCoordinate := []int{x, y}
+	for _, blockPath := range blockPaths {
+		equal := reflect.DeepEqual(checkCoordinate, blockPath)
+		if equal {
+			return true
+		}
+	}
+	return false
+}
 // misc. to clear terminal
 func clear() {
 	var cmd *exec.Cmd
@@ -185,8 +200,8 @@ func printBoardData(message string) {
 
 	fmt.Printf("\ncurrent position (X): %+v\n", currentPosition)
 	fmt.Printf("\npossible treasure location left:\n %d\n\n", possibleTreasurePosition)
-	fmt.Println()
 
+	//fmt.Printf("\n treasure location:\n %d\n\n", treasurePosition)
 	// print message if any
 	if message != "" {
 		fmt.Printf("%s\n", message)
@@ -229,13 +244,19 @@ func processInput(input string) {
 	// generalize direction into 4: up, right, down, left
 	switch direction {
 	case "up", "north":
+		if doneGoUp{
+			fmt.Println("cannot go up anymore")
+			return
+		}
 		direction = "up"
 	case "right", "east":
+		if doneGoRight{
+			fmt.Println("cannot go right anymore")
+			return
+		}
 		direction = "right"
 	case "down", "south":
 		direction = "down"
-	case "left", "west":
-		direction = "left"
 	default:
 		fmt.Println("invalid direction input!")
 		return
@@ -253,7 +274,6 @@ func processInput(input string) {
 	// checking possibility user found the treasure
 	check, index := isInPossibleTreasureLocation(currentPosition)
 	if check {
-
 		// remove this position from possible treasure location
 		removeVisitedLocationFromPossibleTreasureList(index)
 		fmt.Print("checking treasure..")
@@ -263,7 +283,25 @@ func processInput(input string) {
 		} else {
 			// treasure found!
 			endGame()
+			return
 		}
+	}
+
+	if doneGoUp && !doneGoRight && !doneGoDown {
+		// check right, if next is obstacle, then game over
+		if isInBlockPath(currentPosition[0], currentPosition[1]+1){
+			gameOver()
+		}
+	}
+	if doneGoUp && doneGoRight && !doneGoDown{
+		// check down, if next is obstacle, then game over
+		if isInBlockPath(currentPosition[0]+1, currentPosition[1]){
+			gameOver()
+		}
+	}
+
+	if doneGoUp && doneGoRight && doneGoDown{
+		gameOver()
 	}
 }
 
@@ -283,12 +321,13 @@ func navigate(direction string, step int) (message string) {
 		switch direction {
 		case "up":
 			x = x - 1
+			doneGoUp = true
 		case "right":
 			y = y + 1
+			doneGoRight = true
 		case "down":
 			x = x + 1
-		case "left":
-			y = y - 1
+			doneGoDown = true
 		}
 
 		// check per step validity.
@@ -307,7 +346,6 @@ func navigate(direction string, step int) (message string) {
 
 	return ""
 }
-
 func isInPossibleTreasureLocation(curPos []int) (bool, int) {
 	var ret bool
 	for i, v := range possibleTreasurePosition {
@@ -340,19 +378,35 @@ func endGame() {
 	}
 }
 
+// finish the game with option to quit or play again
+func gameOver() {
+	printBoardData("Game Over, no more steps available for you!")
+	fmt.Printf("treasure location:\n %d\n\n", treasurePosition)
+	for {
+		buf := bufio.NewReader(os.Stdin)
+		fmt.Print("press Enter to play again, or 'q' to quit > ")
+		input, err := buf.ReadBytes('\n')
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			if strings.TrimSuffix(strings.ToLower(string(input)), "\n") == "q" {
+				os.Exit(1)
+			} else {
+				main()
+			}
+		}
+	}
+}
+
 // reset variable values
 func reset() {
 	// map of coordinates
 	clearPaths = make([][]int, 0)
 	possibleTreasurePosition = make([][]int, 0)
-	// coordinate for current position
 	currentPosition = make([]int, 0)
-
-	// coordinate for treasure position
 	treasurePosition = make([]int, 0)
-
-	// store data per row, use index as key
 	rowData = make(map[int][]string, 0)
+	doneGoDown,doneGoRight, doneGoUp = false, false,false
 }
 
 func printHelp() {
@@ -361,7 +415,7 @@ func printHelp() {
 Input format: directions [space] step 
 
 Available directions:
-	input (string): up, north, down, south, right, east, left, west
+	input (string): up, north, down, south, right, east
 
 Step:
 	input (integer) : 0 ... positive value 
@@ -369,5 +423,12 @@ Step:
 Example: 
 	I want to go upper for 2 steps,
 	just type: 'up 2' or 'north 2'
+
+Rule:
+	You only have 3 steps available to turn.
+
+	First you can only move 'up', 
+	After that you can only move 'right', 
+	Last step you can only move 'down'
 ========================================================================`)
 }
