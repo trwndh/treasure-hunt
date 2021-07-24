@@ -8,7 +8,7 @@ This is simple command line game, built using Golang
 Just run `$ make play` or `$ go run main.go` to start the game
 
 ## How To Play
-Based on grid configuration in `board_grid.txt` file, you will have a board game that contains 4 elements: 
+Based on given grid, you will have a board game that contains 4 elements: 
 ```
 - # -> as an obstacle
 - . (dot) -> as the clearpath, you can only move to these path
@@ -24,10 +24,18 @@ available directions:
 1. Up / North 
 2. Down / South
 3. Right / East
-4. Left / West
 ```
 
-`example: `
+You only have 3 steps available to find Treasure.
+
+	1. First you can only move 'up / north', 
+	2. After that you can only move 'right / right', 
+	3. Last step you can only move 'down / south'
+
+If after these 3 steps you didn't find treasure, then Game is over.
+
+---
+### Example
 ```
 the board look like this:
 
@@ -51,8 +59,7 @@ The result will look like this:
 5: [# # # # # # # #]
 
 ```
-
-do this to move your position to each of `$`. 
+ 
 
 ## Quit the game
 
