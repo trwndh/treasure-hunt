@@ -29,7 +29,7 @@ available directions:
 You only have 3 steps available to find Treasure.
 
 	1. First you can only move 'up / north', 
-	2. After that you can only move 'right / right', 
+	2. After that you can only move 'right / east', 
 	3. Last step you can only move 'down / south'
 
 If after these 3 steps you didn't find treasure, then Game is over.
